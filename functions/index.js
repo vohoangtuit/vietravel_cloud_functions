@@ -591,38 +591,39 @@ async function doExportSessions(data) {
   let totalInserted = 0;
 
   for (const date of dates) {
-  //  console.log(`📆 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
+    console.log(`📆 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
     const userSnapshot = await db.ref(`Tracking/Sessions/${date}`).once("value");
-    const users = userSnapshot.val();
-    if (!users) continue;
+    const userRecords = userSnapshot.val();
+    if (!userRecords) continue;
 
-    const rows = [];
+    for (const userId in userRecords) {
+      const records = userRecords[userId];
+      if (!records) continue;
 
-    for (const [userId, sessions] of Object.entries(users)) {
-      for (const [key, value] of Object.entries(sessions)) {
+      const rows = Object.entries(records).map(([key, value]) => {
         const row = {
           key,
-          userId,
+          userId, // Ghi lại userId để trace
+          ...value,
           yearMonthDay: value.yearMonthDay || value.dayMonthYear || date,
-          ...value
         };
         delete row.dayMonthYear;
         Object.keys(row).forEach((f) => {
           if (row[f] === undefined) row[f] = null;
         });
-        rows.push(row);
-      }
-    }
+        return row;
+      });
 
-    if (rows.length > 0) {
-     // console.log(`📦 Inserting ${rows.length} new rows for ${date}`);
-      for (let i = 0; i < rows.length; i += batchSize) {
-        const batch = rows.slice(i, i + batchSize);
-        try {
-          await bigquery.dataset(datasetId).table(tableTo).insert(batch);
-          totalInserted += batch.length;
-        } catch (err) {
-          console.error(`❌ Insert failed on ${date}:`, err.message);
+      if (rows.length > 0) {
+        console.log(`📦 Inserting ${rows.length} rows for ${date}/${userId}`);
+        for (let i = 0; i < rows.length; i += batchSize) {
+          const batch = rows.slice(i, i + batchSize);
+          try {
+            await bigquery.dataset(datasetId).table(tableTo).insert(batch);
+            totalInserted += batch.length;
+          } catch (err) {
+            console.error(`❌ Insert failed on ${date}/${userId}:`, err.message);
+          }
         }
       }
     }
