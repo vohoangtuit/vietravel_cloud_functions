@@ -24,7 +24,7 @@ const tableNameMap = {
   SearchTour: "search_tour",
   SearchCombo: "search_combo",
   SearchOnMap: "search_on_map",
-  TourDetailFrom: "tour_detail_from",
+  ChatBot: "tour_detail_from",// tour defail from chat bot
   Notifications: "notification",
   BookTourComplete: "book_tour_success",
   BookHotelSuccess: "book_hotel_success",
@@ -97,7 +97,7 @@ exports.realtimeToBigQuery = onValueCreated(
     const data = event.data.val();
     const key = event.data.key;
     const { tableName, date } = event.params;
-    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-04-27")) {
+    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
      // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
       return;
     }
@@ -155,7 +155,7 @@ exports.realtimeMapCategory = onValueCreated(
     const data = event.data.val();
     const key = event.data.key;
     const { date } = event.params;
-    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-04-27")) {
+    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
       // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
        return;
      }
@@ -182,7 +182,7 @@ exports.realtimeMapDetail = onValueCreated(
     const data = event.data.val();
     const key = event.data.key;
     const { date } = event.params;
-    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-04-27")) {
+    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
       // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
        return;
      }
@@ -209,7 +209,7 @@ exports.realtimeTextOnMap = onValueCreated(
     const data = event.data.val();
     const key = event.data.key;
     const { date } = event.params;
-    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-04-27")) {
+    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
       // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
        return;
      }
@@ -260,7 +260,7 @@ exports.realtimeBookingFaild = onValueCreated(
   }
 );
 
-
+//-------------------------------------
 // ✅ Export function: manually export from Firebase to BigQuery
 async function doExport(data) {
   const { tableFrom, tableTo, startDate, endDate } = data;
@@ -356,7 +356,7 @@ async function doExportTourDetailFrom(data) {
 
   for (const date of dates) {
     //console.log(`📆 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
-    const snapshot = await db.ref(`Tracking/TourDetialFrom/${tableFrom}/${date}`).once("value");
+    const snapshot = await db.ref(`Tracking/TourDetailFrom/${tableFrom}/${date}`).once("value");
     const records = snapshot.val();
     if (!records) continue;
 
@@ -562,6 +562,88 @@ exports.exportTableSearchOnMap = onRequest({ region: "us-central1" }, async (req
     }
 
     doExportSearchOnMap(data).catch((err) =>
+      console.error("❌ Lỗi trong doExport:", err.message)
+    );
+
+    return res.json({
+      data: {
+        success: true,
+        message: "⏳ Đã nhận yêu cầu export, server đang xử lý ngầm..."
+      }
+    });
+  } catch (err) {
+    console.error("❌ exportTable error:", err.message);
+    return res.status(500).json({ error: "Lỗi nội bộ khi xử lý exportTable." });
+  }
+});
+/// Export table Session
+async function doExportSessions(data) {
+  const { tableFrom, tableTo, startDate, endDate } = data;
+  const dates = [];
+  let current = new Date(startDate);
+  const end = new Date(endDate);
+
+  while (current <= end) {
+    dates.push(current.toISOString().split("T")[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  let totalInserted = 0;
+
+  for (const date of dates) {
+  //  console.log(`📆 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
+    const userSnapshot = await db.ref(`Tracking/Sessions/${date}`).once("value");
+    const users = userSnapshot.val();
+    if (!users) continue;
+
+    const rows = [];
+
+    for (const [userId, sessions] of Object.entries(users)) {
+      for (const [key, value] of Object.entries(sessions)) {
+        const row = {
+          key,
+          userId,
+          yearMonthDay: value.yearMonthDay || value.dayMonthYear || date,
+          ...value
+        };
+        delete row.dayMonthYear;
+        Object.keys(row).forEach((f) => {
+          if (row[f] === undefined) row[f] = null;
+        });
+        rows.push(row);
+      }
+    }
+
+    if (rows.length > 0) {
+     // console.log(`📦 Inserting ${rows.length} new rows for ${date}`);
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+        try {
+          await bigquery.dataset(datasetId).table(tableTo).insert(batch);
+          totalInserted += batch.length;
+        } catch (err) {
+          console.error(`❌ Insert failed on ${date}:`, err.message);
+        }
+      }
+    }
+  }
+
+  console.log(`🎉 Export complete. Total inserted: ${totalInserted}`);
+}
+exports.exportTableSessions = onRequest({ region: "us-central1" }, async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(204).send('');
+
+  try {
+    const data = req.body.data;
+    if (!data?.tableFrom || !data?.tableTo || !data?.startDate || !data?.endDate) {
+      return res.status(400).json({ error: "Thiếu tham số bắt buộc." });
+    }
+
+    doExportSessions(data).catch((err) =>
       console.error("❌ Lỗi trong doExport:", err.message)
     );
 
