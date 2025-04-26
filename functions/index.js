@@ -126,7 +126,7 @@ exports.realtimeSession = onValueCreated(
     const key = event.data.key;
     const { date } = event.params;
     const dateObj = new Date(date);
-    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-04-27")) {
+    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
      // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
       return;
     }
@@ -155,7 +155,10 @@ exports.realtimeMapCategory = onValueCreated(
     const data = event.data.val();
     const key = event.data.key;
     const { date } = event.params;
-
+    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-04-27")) {
+      // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
+       return;
+     }
     const url = `https://us-central1-vietravel-app.cloudfunctions.net/insertToBigQuery`;
 
     const payload = {
@@ -179,7 +182,10 @@ exports.realtimeMapDetail = onValueCreated(
     const data = event.data.val();
     const key = event.data.key;
     const { date } = event.params;
-
+    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-04-27")) {
+      // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
+       return;
+     }
     const url = `https://us-central1-vietravel-app.cloudfunctions.net/insertToBigQuery`;
 
     const payload = {
@@ -203,7 +209,10 @@ exports.realtimeTextOnMap = onValueCreated(
     const data = event.data.val();
     const key = event.data.key;
     const { date } = event.params;
-
+    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-04-27")) {
+      // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
+       return;
+     }
     const url = `https://us-central1-vietravel-app.cloudfunctions.net/insertToBigQuery`;
 
     const payload = {
@@ -227,7 +236,7 @@ exports.realtimeBookingFaild = onValueCreated(
     const data = event.data.val();
     const key = event.data.key;
     const { tableName, date } = event.params;
-    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-04-27")) {
+    if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
     //  console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
       return;
     }
@@ -267,8 +276,245 @@ async function doExport(data) {
   let totalInserted = 0;
 
   for (const date of dates) {
-    console.log(`📆 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
+    //console.log(`📆 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
     const snapshot = await db.ref(`Tracking/${tableFrom}/${date}`).once("value");
+    const records = snapshot.val();
+    if (!records) continue;
+
+    const rows = Object.entries(records).map(([key, value]) => {
+      const row = {
+        key,
+        ...value,
+        yearMonthDay: value.yearMonthDay || value.dayMonthYear || date
+      };
+      delete row.dayMonthYear;
+      Object.keys(row).forEach((f) => {
+        if (row[f] === undefined) row[f] = null;
+      });
+      return row;
+    });
+
+    if (rows.length > 0) {
+      console.log(`📦 Inserting ${rows.length} new rows for ${date}`);
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+        try {
+          await bigquery.dataset(datasetId).table(tableTo).insert(batch);
+          totalInserted += batch.length;
+        } catch (err) {
+          console.error(`❌ Insert failed on ${date}:`, err.message);
+        }
+      }
+    }
+  }
+
+  //console.log(`🎉 Export complete. Total inserted: ${totalInserted}`);
+}
+
+exports.exportTable = onRequest({ region: "us-central1" }, async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(204).send('');
+
+  try {
+    const data = req.body.data;
+    if (!data?.tableFrom || !data?.tableTo || !data?.startDate || !data?.endDate) {
+      return res.status(400).json({ error: "Thiếu tham số bắt buộc." });
+    }
+
+    doExport(data).catch((err) =>
+      console.error("❌ Lỗi trong doExport:", err.message)
+    );
+
+    return res.json({
+      data: {
+        success: true,
+        message: "⏳ Đã nhận yêu cầu export, server đang xử lý ngầm..."
+      }
+    });
+  } catch (err) {
+    console.error("❌ exportTable error:", err.message);
+    return res.status(500).json({ error: "Lỗi nội bộ khi xử lý exportTable." });
+  }
+});
+
+/// Export table TourDetailFrom
+async function doExportTourDetailFrom(data) {
+  const { tableFrom, tableTo, startDate, endDate } = data;
+  const dates = [];
+  let current = new Date(startDate);
+  const end = new Date(endDate);
+
+  while (current <= end) {
+    dates.push(current.toISOString().split("T")[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  let totalInserted = 0;
+
+  for (const date of dates) {
+    //console.log(`📆 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
+    const snapshot = await db.ref(`Tracking/TourDetialFrom/${tableFrom}/${date}`).once("value");
+    const records = snapshot.val();
+    if (!records) continue;
+
+    const rows = Object.entries(records).map(([key, value]) => {
+      const row = {
+        key,
+        ...value,
+        yearMonthDay: value.yearMonthDay || value.dayMonthYear || date
+      };
+      delete row.dayMonthYear;
+      Object.keys(row).forEach((f) => {
+        if (row[f] === undefined) row[f] = null;
+      });
+      return row;
+    });
+
+    if (rows.length > 0) {
+      console.log(`📦 Inserting ${rows.length} new rows for ${date}`);
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+        try {
+          await bigquery.dataset(datasetId).table(tableTo).insert(batch);
+          totalInserted += batch.length;
+        } catch (err) {
+          console.error(`❌ Insert failed on ${date}:`, err.message);
+        }
+      }
+    }
+  }
+
+  //console.log(`🎉 Export complete. Total inserted: ${totalInserted}`);
+}
+
+exports.exportTableTourDetailFrom = onRequest({ region: "us-central1" }, async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(204).send('');
+
+  try {
+    const data = req.body.data;
+    if (!data?.tableFrom || !data?.tableTo || !data?.startDate || !data?.endDate) {
+      return res.status(400).json({ error: "Thiếu tham số bắt buộc." });
+    }
+
+    doExportTourDetailFrom(data).catch((err) =>
+      console.error("❌ Lỗi trong doExport:", err.message)
+    );
+
+    return res.json({
+      data: {
+        success: true,
+        message: "⏳ Đã nhận yêu cầu export, server đang xử lý ngầm..."
+      }
+    });
+  } catch (err) {
+    console.error("❌ exportTable error:", err.message);
+    return res.status(500).json({ error: "Lỗi nội bộ khi xử lý exportTable." });
+  }
+});
+
+/// Export table BookingFailed
+async function doExportBookingFailed(data) {
+  const { tableFrom, tableTo, startDate, endDate } = data;
+  const dates = [];
+  let current = new Date(startDate);
+  const end = new Date(endDate);
+
+  while (current <= end) {
+    dates.push(current.toISOString().split("T")[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  let totalInserted = 0;
+
+  for (const date of dates) {
+    //console.log(`📆 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
+    const snapshot = await db.ref(`Tracking/BookingFail/${tableFrom}/${date}`).once("value");
+    const records = snapshot.val();
+    if (!records) continue;
+
+    const rows = Object.entries(records).map(([key, value]) => {
+      const row = {
+        key,
+        ...value,
+        yearMonthDay: value.yearMonthDay || value.dayMonthYear || date
+      };
+      delete row.dayMonthYear;
+      Object.keys(row).forEach((f) => {
+        if (row[f] === undefined) row[f] = null;
+      });
+      return row;
+    });
+
+    if (rows.length > 0) {
+      console.log(`📦 Inserting ${rows.length} new rows for ${date}`);
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+        try {
+          await bigquery.dataset(datasetId).table(tableTo).insert(batch);
+          totalInserted += batch.length;
+        } catch (err) {
+          console.error(`❌ Insert failed on ${date}:`, err.message);
+        }
+      }
+    }
+  }
+
+  //console.log(`🎉 Export complete. Total inserted: ${totalInserted}`);
+}
+
+exports.exportTableBookingFail = onRequest({ region: "us-central1" }, async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(204).send('');
+
+  try {
+    const data = req.body.data;
+    if (!data?.tableFrom || !data?.tableTo || !data?.startDate || !data?.endDate) {
+      return res.status(400).json({ error: "Thiếu tham số bắt buộc." });
+    }
+
+    doExportBookingFailed(data).catch((err) =>
+      console.error("❌ Lỗi trong doExport:", err.message)
+    );
+
+    return res.json({
+      data: {
+        success: true,
+        message: "⏳ Đã nhận yêu cầu export, server đang xử lý ngầm..."
+      }
+    });
+  } catch (err) {
+    console.error("❌ exportTable error:", err.message);
+    return res.status(500).json({ error: "Lỗi nội bộ khi xử lý exportTable." });
+  }
+});
+
+/// Export table SearchOnMap
+async function doExportSearchOnMap(data) {
+  const { tableFrom, tableTo, startDate, endDate } = data;
+  const dates = [];
+  let current = new Date(startDate);
+  const end = new Date(endDate);
+
+  while (current <= end) {
+    dates.push(current.toISOString().split("T")[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  let totalInserted = 0;
+
+  for (const date of dates) {
+    console.log(`📆 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
+    const snapshot = await db.ref(`Tracking/SearchOnMap/${tableFrom}/${date}`).once("value");
     const records = snapshot.val();
     if (!records) continue;
 
@@ -302,7 +548,7 @@ async function doExport(data) {
   console.log(`🎉 Export complete. Total inserted: ${totalInserted}`);
 }
 
-exports.exportTable = onRequest({ region: "us-central1" }, async (req, res) => {
+exports.exportTableSearchOnMap = onRequest({ region: "us-central1" }, async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'POST');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
@@ -315,7 +561,7 @@ exports.exportTable = onRequest({ region: "us-central1" }, async (req, res) => {
       return res.status(400).json({ error: "Thiếu tham số bắt buộc." });
     }
 
-    doExport(data).catch((err) =>
+    doExportSearchOnMap(data).catch((err) =>
       console.error("❌ Lỗi trong doExport:", err.message)
     );
 
@@ -330,8 +576,6 @@ exports.exportTable = onRequest({ region: "us-central1" }, async (req, res) => {
     return res.status(500).json({ error: "Lỗi nội bộ khi xử lý exportTable." });
   }
 });
-
-
 
 // DELETE FROM `vietravel-app.tracking.book_tour_success` WHERE TRUE
 // DELETE FROM `vietravel-app.tracking.usage_app`
@@ -348,3 +592,32 @@ exports.exportTable = onRequest({ region: "us-central1" }, async (req, res) => {
 //5:  firebase deploy --only functions
 
 // firebase functions:list
+
+
+/// xoá tất cả dử liệu ở các tatble
+
+// TRUNCATE TABLE `vietravel-app.tracking.usage_app`;
+// TRUNCATE TABLE `vietravel-app.tracking.sessions`;
+// TRUNCATE TABLE `vietravel-app.tracking.event_click`;
+// TRUNCATE TABLE `vietravel-app.tracking.search_keyword`;
+// TRUNCATE TABLE `vietravel-app.tracking.search_destination`;
+// TRUNCATE TABLE `vietravel-app.tracking.sign_in_account`;
+// TRUNCATE TABLE `vietravel-app.tracking.screen_views`;
+// TRUNCATE TABLE `vietravel-app.tracking.search_tour`;
+// TRUNCATE TABLE `vietravel-app.tracking.search_combo`;
+// TRUNCATE TABLE `vietravel-app.tracking.search_on_map`;
+// TRUNCATE TABLE `vietravel-app.tracking.tour_detail_from`;
+// TRUNCATE TABLE `vietravel-app.tracking.notification`;
+// TRUNCATE TABLE `vietravel-app.tracking.book_tour_success`;
+// TRUNCATE TABLE `vietravel-app.tracking.book_hotel_success`;
+// TRUNCATE TABLE `vietravel-app.tracking.book_flight_success`;
+// TRUNCATE TABLE `vietravel-app.tracking.book_hotel_flight_success`;
+// TRUNCATE TABLE `vietravel-app.tracking.book_sight_seeing_success`;
+// TRUNCATE TABLE `vietravel-app.tracking.book_tour_failed`;
+// TRUNCATE TABLE `vietravel-app.tracking.book_hotel_failed`;
+// TRUNCATE TABLE `vietravel-app.tracking.book_flight_failed`;
+// TRUNCATE TABLE `vietravel-app.tracking.book_hotel_failed`;
+// TRUNCATE TABLE `vietravel-app.tracking.test_tracking`;
+// TRUNCATE TABLE `vietravel-app.tracking.map_search_category`;
+// TRUNCATE TABLE `vietravel-app.tracking.map_detail`;
+// TRUNCATE TABLE `vietravel-app.tracking.map_search_text`;
