@@ -642,25 +642,29 @@ exports.exportTableSessions = onRequest({ region: "us-central1" }, async (req, r
   try {
     const data = req.body.data;
     if (!data?.tableFrom || !data?.tableTo || !data?.startDate || !data?.endDate) {
-      console.error("❌ [exportTableSessions] Thiếu tham số bắt buộc:", data);
       return res.status(400).json({ error: "Thiếu tham số bắt buộc." });
     }
 
-    console.log("🚀 [exportTableSessions] Nhận yêu cầu export:", data);
+    // ✅ Không await, xử lý ngầm
+    doExportSessions(data).catch((err) =>
+      console.error("❌ Lỗi trong doExportSessions:", err.message)
+    );
 
-    await doExportSessions(data);
-
+    // ✅ Trả response ngay
     return res.json({
       data: {
         success: true,
-        message: "✅ Server đã hoàn tất xử lý export Sessions!"
+        message: "⏳ Đã nhận yêu cầu export Sessions, server đang xử lý ngầm..."
       }
     });
   } catch (err) {
-    console.error("❌ [exportTableSessions] Lỗi xử lý exportTableSessions:", err.message);
-    return res.status(500).json({ error: "Internal Server Error." });
+    console.error("❌ exportTableSessions error:", err.message);
+    return res.status(500).json({ error: "Lỗi nội bộ khi xử lý exportTableSessions." });
   }
 });
+
+
+// ✅ Đã export data tới ngày 2025-04-27
 
 // DELETE FROM `vietravel-app.tracking.book_tour_success` WHERE TRUE
 // DELETE FROM `vietravel-app.tracking.usage_app`
