@@ -709,3 +709,14 @@ exports.exportTableSessions = onRequest({ region: "us-central1" }, async (req, r
 // TRUNCATE TABLE `vietravel-app.tracking.map_search_category`;
 // TRUNCATE TABLE `vietravel-app.tracking.map_detail`;
 // TRUNCATE TABLE `vietravel-app.tracking.map_search_text`;
+
+// todo export từ postman: thay function và tableFrom, tableTo, startDate,endDate
+// https://us-central1-vietravel-app.cloudfunctions.net/exportTableSessions
+// {
+//   "data": {
+//       "tableFrom": "Sessions",
+//       "tableTo": "sessions",
+//       "startDate": "2025-03-10",
+//       "endDate": "2025-03-31"
+//   }
+// }
