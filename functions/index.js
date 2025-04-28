@@ -591,19 +591,20 @@ async function doExportSessions(data) {
   let totalInserted = 0;
 
   for (const date of dates) {
-    console.log(`📆 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
-    const userSnapshot = await db.ref(`Tracking/Sessions/${date}`).once("value");
-    const userRecords = userSnapshot.val();
-    if (!userRecords) continue;
+    console.log(`📅 Exporting date: ${date} - Table: ${tableFrom} -> ${tableTo}`);
+    
+    // Bước 1: Lấy danh sách tất cả userId tại ngày đó
+    const usersSnapshot = await db.ref(`Tracking/${tableFrom}/${date}`).once("value");
+    const users = usersSnapshot.val();
+    if (!users) continue;
 
-    for (const userId in userRecords) {
-      const records = userRecords[userId];
-      if (!records) continue;
+    for (const [userId, sessions] of Object.entries(users)) {
+      if (!sessions) continue;
 
-      const rows = Object.entries(records).map(([key, value]) => {
+      const rows = Object.entries(sessions).map(([pushId, value]) => {
         const row = {
-          key,
-          userId, // Ghi lại userId để trace
+          key: pushId,
+          userId: userId,
           ...value,
           yearMonthDay: value.yearMonthDay || value.dayMonthYear || date,
         };
@@ -615,22 +616,22 @@ async function doExportSessions(data) {
       });
 
       if (rows.length > 0) {
-        console.log(`📦 Inserting ${rows.length} rows for ${date}/${userId}`);
+        console.log(`📦 Inserting ${rows.length} rows for user ${userId} on ${date}`);
         for (let i = 0; i < rows.length; i += batchSize) {
           const batch = rows.slice(i, i + batchSize);
           try {
             await bigquery.dataset(datasetId).table(tableTo).insert(batch);
             totalInserted += batch.length;
           } catch (err) {
-            console.error(`❌ Insert failed on ${date}/${userId}:`, err.message);
+            console.error(`❌ Insert failed for user ${userId} on ${date}:`, err.message);
           }
         }
       }
     }
   }
-
   console.log(`🎉 Export complete. Total inserted: ${totalInserted}`);
 }
+
 exports.exportTableSessions = onRequest({ region: "us-central1" }, async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'POST');
@@ -641,22 +642,23 @@ exports.exportTableSessions = onRequest({ region: "us-central1" }, async (req, r
   try {
     const data = req.body.data;
     if (!data?.tableFrom || !data?.tableTo || !data?.startDate || !data?.endDate) {
+      console.error("❌ [exportTableSessions] Thiếu tham số bắt buộc:", data);
       return res.status(400).json({ error: "Thiếu tham số bắt buộc." });
     }
 
-    doExportSessions(data).catch((err) =>
-      console.error("❌ Lỗi trong doExport:", err.message)
-    );
+    console.log("🚀 [exportTableSessions] Nhận yêu cầu export:", data);
+
+    await doExportSessions(data);
 
     return res.json({
       data: {
         success: true,
-        message: "⏳ Đã nhận yêu cầu export, server đang xử lý ngầm..."
+        message: "✅ Server đã hoàn tất xử lý export Sessions!"
       }
     });
   } catch (err) {
-    console.error("❌ exportTable error:", err.message);
-    return res.status(500).json({ error: "Lỗi nội bộ khi xử lý exportTable." });
+    console.error("❌ [exportTableSessions] Lỗi xử lý exportTableSessions:", err.message);
+    return res.status(500).json({ error: "Internal Server Error." });
   }
 });
 
@@ -676,6 +678,9 @@ exports.exportTableSessions = onRequest({ region: "us-central1" }, async (req, r
 
 // firebase functions:list
 
+
+//todo Xem các functions
+// https://console.cloud.google.com/run?authuser=0&hl=en&project=vietravel-app
 
 /// xoá tất cả dử liệu ở các tatble
 
