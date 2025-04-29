@@ -32,7 +32,7 @@ export {
   realtimeBookingFaild,
 };
 
-// ✅ Đã export data tới ngày 2025-04-27
+// ✅ Đã export data tới ngày 2025-04-28
 
 // DELETE FROM `vietravel-app.tracking.book_tour_success` WHERE TRUE
 // DELETE FROM `vietravel-app.tracking.usage_app`
