@@ -14,6 +14,9 @@ import {
   realtimeMapDetail,
   realtimeTextOnMap,
   realtimeBookingFaild,
+  realtimeSearchFlights,
+  realtimeSearchHotel,
+  realtimeSearchSightSeeing
 } from "./realtimeFunctions.js";
 
 // Xuất ra tất cả các hàm Cloud Functions để deploy
@@ -30,6 +33,9 @@ export {
   realtimeMapDetail,
   realtimeTextOnMap,
   realtimeBookingFaild,
+  realtimeSearchFlights,
+  realtimeSearchHotel,
+  realtimeSearchSightSeeing
 };
 
 // ✅ Đã export data tới ngày 2025-04-28

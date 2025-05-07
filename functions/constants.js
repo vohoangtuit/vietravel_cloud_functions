@@ -24,6 +24,9 @@ export const tableNameMap = {
     TestTracking: "test_tracking",
     CategoryOnMap: "map_search_category",
     DetailOnMap: "map_detail",
-    TextOnMap: "map_search_text"
+    TextOnMap: "map_search_text",
+    SearchFlights:"search_flights",
+    SearchHotel:"search_hotel",
+    SearchSightSeeing:"search_sightseeing"
     
   };

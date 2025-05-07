@@ -233,3 +233,74 @@ const urlInsert = `https://us-central1-vietravel-app.cloudfunctions.net/insertTo
       }
     }
   );
+
+   /// Search Flights
+  export const realtimeSearchFlights = onValueCreated(
+    "/Tracking/SearchFlights/{date}/{pushId}",
+    async (event) => {
+      const data = event.data.val();
+      const key = event.data.key;
+      const { tableName, date } = event.params;
+      
+      const payload = {
+        key,
+        date,
+        tableName,
+        ...data
+      };
+  
+      try {
+        await axios.post(urlInsert, payload);
+       // console.log("📤 Dispatched to Cloud Task (Realtime)");
+      } catch (err) {
+        console.error("❌ Failed to dispatch task (Realtime):", err.message);
+      }
+    }
+  );
+
+     /// Search Hotel
+     export const realtimeSearchHotel = onValueCreated(
+      "/Tracking/SearchHotel/{date}/{pushId}",
+      async (event) => {
+        const data = event.data.val();
+        const key = event.data.key;
+        const { tableName, date } = event.params;
+        
+        const payload = {
+          key,
+          date,
+          tableName,
+          ...data
+        };
+    
+        try {
+          await axios.post(urlInsert, payload);
+         // console.log("📤 Dispatched to Cloud Task (Realtime)");
+        } catch (err) {
+          console.error("❌ Failed to dispatch task (Realtime):", err.message);
+        }
+      }
+    );
+    /// Search SightSeeing
+    export const realtimeSearchSightSeeing = onValueCreated(
+      "/Tracking/SearchSightSeeing/{date}/{pushId}",
+      async (event) => {
+        const data = event.data.val();
+        const key = event.data.key;
+        const { tableName, date } = event.params;
+        
+        const payload = {
+          key,
+          date,
+          tableName,
+          ...data
+        };
+    
+        try {
+          await axios.post(urlInsert, payload);
+         // console.log("📤 Dispatched to Cloud Task (Realtime)");
+        } catch (err) {
+          console.error("❌ Failed to dispatch task (Realtime):", err.message);
+        }
+      }
+    );
