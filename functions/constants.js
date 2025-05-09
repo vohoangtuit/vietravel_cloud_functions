@@ -27,6 +27,7 @@ export const tableNameMap = {
     TextOnMap: "map_search_text",
     SearchFlights:"search_flights",
     SearchHotel:"search_hotel",
-    SearchSightSeeing:"search_sightseeing"
+    SearchSightSeeing:"search_sightseeing",
+    ViewTourDetail:"tour_detail"
     
   };
