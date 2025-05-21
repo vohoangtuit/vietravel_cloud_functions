@@ -21,10 +21,17 @@ import {
 
 import { getUserTrends } from "./analyticsTrends.js";
 
-import {getBookingSummary} from "./client/get_booking_suceess.js";
+import {getBookingSummary,getBookTourFlow} from "./client/get_booking_suceess.js";
 
-import {getSessions} from "./client/get_sessions.js";
+import {getSessions,getUserDemographics} from "./client/get_sessions.js";
 
+import {getSearchKeywords} from "./client/get_keyword.js";
+
+import {getSearchDestinations} from "./client/get_destination.js";
+
+import {getScreenViews,getScreenViewDetail} from "./client/screen_views.js";
+
+import {getEventClicks,getEventClickDetail} from "./client/event_click.js";
 
 // Xuất ra tất cả các hàm Cloud Functions để deploy
 export {
@@ -45,7 +52,15 @@ export {
   realtimeSearchSightSeeing,
   getUserTrends,
   getBookingSummary,
-  getSessions
+  getBookTourFlow,
+  getSessions,
+  getUserDemographics,
+  getSearchKeywords,
+  getScreenViews,
+  getScreenViewDetail,
+  getSearchDestinations,
+  getEventClicks,
+  getEventClickDetail
 };
 
 // ✅ Đã export data tới ngày 2025-04-28
