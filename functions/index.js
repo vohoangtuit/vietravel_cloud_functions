@@ -1,3 +1,20 @@
+
+//
+import {answerTrackingQuery} from "./answer_tracking/answer.js";
+export {
+  answerTrackingQuery
+};
+
+
+//1: cd functions
+//2: rm -rf node_modules package-lock.json
+//3:  npm install
+// 4: cd .. 
+//5:  firebase deploy --only functions
+
+// firebase deploy --only functions:answerTrackingQueryV2
+//-----
+
 import {
   exportTable,
   exportTableSessions,
@@ -33,6 +50,7 @@ import {getScreenViews,getScreenViewDetail} from "./client/screen_views.js";
 
 import {getEventClicks,getEventClickDetail} from "./client/event_click.js";
 
+
 // Xuất ra tất cả các hàm Cloud Functions để deploy
 export {
   // exportTable,
@@ -63,11 +81,14 @@ export {
   getEventClickDetail
 };
 
-// ✅ Đã export data tới ngày 2025-04-28
+import {trainKeywordModel,scheduledTrainKeywordModel,predictPopularKeywords} from "./training/keyword.js";
+export {
+  trainKeywordModel,scheduledTrainKeywordModel,predictPopularKeywords
+};
 
-// DELETE FROM `vietravel-app.tracking.book_tour_success` WHERE TRUE
-// DELETE FROM `vietravel-app.tracking.usage_app`
-// WHERE yearMonthDay < "2025-04-23"
+
+// firebase deploy --only functions:predictPopularKeywords,trainKeywordModel
+
 
 // / todo chang code thì vào
 // cd functions xóa log rồi npm install lại rồi quay về thư mục góc deploy
@@ -79,8 +100,11 @@ export {
 // 4: cd .. 
 //5:  firebase deploy --only functions
 
-// firebase functions:list
+// firebase deploy --only functions:getBookTourFlow
 
+
+
+// https://us-central1-vietravel-app.cloudfunctions.net/predictPopularKeywords
 
 //todo Xem các functions
 // https://console.cloud.google.com/run?authuser=0&hl=en&project=vietravel-app
@@ -99,6 +123,8 @@ export {
 //   }
 // }
 
-// // ✅ Cloud Function: Export Firebase Realtime Database to BigQuery (GCF Gen 2 - firebase-functions v2 with Cloud Tasks)
-
+// todo keyword
+// todo: https://us-central1-vietravel-app.cloudfunctions.net/getUserTrends
+// todo: https://us-central1-vietravel-app.cloudfunctions.net/predictPopularKeywords
+// getUserTrends query thông thường, predictPopularKeywords dựa vào mô hình training dự đoán 
 

@@ -1,0 +1,7 @@
+{
+    "user": ["user", "users", "người dùng", "khách hàng", "customer", "truy cập", "thiết bị", "device", "giới tính", "tuổi", "location","vị trí", "đăng nhập"],
+    "tour": ["tour", "booking", "book", "chuyến đi", "trip", "tìm tour", "doanh thu", "keyword", "xem nhiều"],
+    "flight": ["vé máy bay", "flight", "book", "booking", "doanh thu"],
+    "hotel": ["khách sạn", "hotel", "book", "booking", "tìm", "doanh thu"],
+    "general": ["báo cáo", "report", "tổng quan"]
+  }
