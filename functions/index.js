@@ -12,7 +12,9 @@ export {
 // 4: cd .. 
 //5:  firebase deploy --only functions
 
-// firebase deploy --only functions:answerTrackingQueryV2
+// firebase deploy --only functions:answerTrackingQuery
+
+// firebase functions:delete answerTrackingQueryV2
 //-----
 
 import {
@@ -100,7 +102,7 @@ export {
 // 4: cd .. 
 //5:  firebase deploy --only functions
 
-// firebase deploy --only functions:getBookTourFlow
+// firebase deploy --only functions:realtimeToBigQuery
 
 
 

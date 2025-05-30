@@ -57,7 +57,7 @@ export function getUserQueries({ fromDate, toDate }) {
       {
         title: "Doanh thu từ tour",
         query: `
-          SELECT SUM(price) as total_revenue
+          SELECT SUM(totalAmount) as total_revenue
           FROM \`tracking.book_tour_success\`
           WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
         `
@@ -65,10 +65,10 @@ export function getUserQueries({ fromDate, toDate }) {
       {
         title: "Top 5 điểm đến được tìm kiếm nhiều nhất",
         query: `
-          SELECT destination, COUNT(*) as count
+          SELECT id,ANY_VALUE(name) AS name, COUNT(*) as count
           FROM \`tracking.search_destination\`
           WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-          GROUP BY destination
+          GROUP BY id
           ORDER BY count DESC
           LIMIT 5
         `
@@ -89,7 +89,7 @@ export function getUserQueries({ fromDate, toDate }) {
       {
         title: "Doanh thu vé máy bay",
         query: `
-          SELECT SUM(price) as total_revenue
+          SELECT SUM(bookingPrice) as total_revenue
           FROM \`tracking.book_flight_success\`
           WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
         `
@@ -110,7 +110,7 @@ export function getUserQueries({ fromDate, toDate }) {
       {
         title: "Doanh thu khách sạn",
         query: `
-          SELECT SUM(price) as total_revenue
+          SELECT SUM(bookingPrice) as total_revenue
           FROM \`tracking.book_hotel_success\`
           WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
         `

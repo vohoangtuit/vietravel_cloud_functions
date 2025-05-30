@@ -21,3 +21,4 @@ export async function getSQLTemplatesFromIntents(intents) {
   
     return rows; // Trả về danh sách object { intent, sql_template }
   }
+  

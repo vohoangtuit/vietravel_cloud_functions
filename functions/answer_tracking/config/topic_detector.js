@@ -1,24 +1,18 @@
-import fs from 'fs';
-import path from 'path';
+import { BigQuery } from "@google-cloud/bigquery";
+const bigquery = new BigQuery();
 
-// Đọc và load file intent_keywords.json
-const intentKeywordsPath = path.resolve('./intent_keywords.json');
-const intentKeywords = JSON.parse(fs.readFileSync(intentKeywordsPath, 'utf8'));
+const DATASET = "tracking";
+const SYNONYM_TABLE = "synonyms";
 
-/**
- * Phát hiện các topic chính từ list từ đã chuẩn hóa
- * @param {string[]} words - danh sách từ trong câu hỏi
- * @returns {string[]} - danh sách các chủ đề tìm thấy (vd: ['user', 'tour'])
- */
-export function detectTopicsFromQuestion(words) {
-  const detectedTopics = [];
-
-  for (const topic in intentKeywords) {
-    const keywords = intentKeywords[topic];
-    if (keywords.some((k) => words.includes(k))) {
-      detectedTopics.push(topic);
-    }
-  }
-
-  return detectedTopics;
+// Chuẩn hoá từ bằng bảng synonyms
+export async function normalizeKeywords(words) {
+  const query = `
+    SELECT alias, keyword
+    FROM \`tracking.synonyms\`
+    WHERE alias IN UNNEST(@words)
+  `;
+  const [rows] = await bigquery.query({ query, params: { words } });
+  const map = Object.fromEntries(rows.map(row => [row.alias, row.keyword]));
+  return words.map(w => map[w] || w);
 }
+// đã cập nhật, nhưng vẫn ko hiểu query

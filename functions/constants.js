@@ -28,6 +28,7 @@ export const tableNameMap = {
     SearchFlights:"search_flights",
     SearchHotel:"search_hotel",
     SearchSightSeeing:"search_sightseeing",
-    ViewTourDetail:"tour_detail"
-    
+    ViewTourDetail:"tour_detail",
+    BookSimSuccess:"book_sim_success",
+    TokenInvalid:"token_invalid"
   };

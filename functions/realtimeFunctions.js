@@ -70,10 +70,10 @@ const urlInsert = `https://us-central1-vietravel-app.cloudfunctions.net/insertTo
       const key = event.data.key;
       const { tableName, date } = event.params;
       const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
-       // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
-        return;
-      }
+      // if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
+
+      //   return;
+      // }
      
       const payload = {
         key,
@@ -81,12 +81,12 @@ const urlInsert = `https://us-central1-vietravel-app.cloudfunctions.net/insertTo
         tableName,
         ...data
       };
-  
+     // console.log("📦 Payload gửi lên:", JSON.stringify(payload, null, 2));
       try {
         await axios.post(urlInsert, payload);
        // console.log("📤 Dispatched to Cloud Task (Realtime)");
       } catch (err) {
-        console.error("❌ Failed to dispatch task (Realtime):", err.message);
+        console.error("❌ Failed to dispatch task (Realtime):", err.response?.data || err.message);
       }
     }
   );
@@ -98,10 +98,10 @@ const urlInsert = `https://us-central1-vietravel-app.cloudfunctions.net/insertTo
       const key = event.data.key;
       const { date } = event.params;
       const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
-       // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
-        return;
-      }
+      // if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
+      //  // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
+      //   return;
+      // }
   
   
       const payload = {
@@ -127,10 +127,10 @@ const urlInsert = `https://us-central1-vietravel-app.cloudfunctions.net/insertTo
       const key = event.data.key;
       const { date } = event.params;
       const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
-        // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
-         return;
-       }
+      // if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
+      //   // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
+      //    return;
+      //  }
      
       const payload = {
         key,
@@ -154,10 +154,10 @@ const urlInsert = `https://us-central1-vietravel-app.cloudfunctions.net/insertTo
       const key = event.data.key;
       const { date } = event.params;
       const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
-        // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
-         return;
-       }
+      // if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
+      //   // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
+      //    return;
+      //  }
       
   
       const payload = {
@@ -182,10 +182,10 @@ const urlInsert = `https://us-central1-vietravel-app.cloudfunctions.net/insertTo
       const key = event.data.key;
       const { date } = event.params;
       const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
-        // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
-         return;
-       }
+      // if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
+      //   // console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
+      //    return;
+      //  }
    
   
       const payload = {
@@ -210,10 +210,10 @@ const urlInsert = `https://us-central1-vietravel-app.cloudfunctions.net/insertTo
       const key = event.data.key;
       const { tableName, date } = event.params;
       const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
-      //  console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
-        return;
-      }
+      // if (isNaN(dateObj.getTime()) || dateObj < new Date("2025-05-01")) {
+      // //  console.log("⏳ Bỏ qua realtimeBookingFaild vì chưa đến ngày 2025-05-01:", date);
+      //   return;
+      // }
       
   
       const payload = {
