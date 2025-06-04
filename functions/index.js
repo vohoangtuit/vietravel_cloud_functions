@@ -89,7 +89,7 @@ export {
 };
 
 
-// firebase deploy --only functions:predictPopularKeywords,trainKeywordModel
+// firebase deploy --only functions:answerTrackingQuery
 
 
 // / todo chang code thì vào
@@ -130,3 +130,4 @@ export {
 // todo: https://us-central1-vietravel-app.cloudfunctions.net/predictPopularKeywords
 // getUserTrends query thông thường, predictPopularKeywords dựa vào mô hình training dự đoán 
 
+// đã chỉnh vẫn ko đc

@@ -1,129 +1,193 @@
 const date ='yearMonthDay';
+// ✅ getUserQueries
 export function getUserQueries({ fromDate, toDate }) {
-    return [
-        {
-            title: "Tổng số người dùng truy cập",
-            query: `
-              SELECT COUNT(DISTINCT userId) as total_users
-              FROM \`tracking.sessions\`
-              WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-            `
-          },
-          {
-            title: "Tổng số lượt đăng nhập",
-            query: `
-              SELECT COUNT(*) as total_signins
-              FROM \`tracking.sign_in_account\`
-              WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-            `
-          },
-          {
-            title: "Top 5 vị trí truy cập",
-            query: `
-              SELECT location, COUNT(*) as count
-              FROM \`tracking.sessions\`
-              WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-              GROUP BY location
-              ORDER BY count DESC
-              LIMIT 5
-            `
-          },
-          {
-            title: "Top 5 khung giờ truy cập nhiều nhất",
-            query: `
-              SELECT 
-                FORMAT_TIMESTAMP('%H', TIMESTAMP(timestamp1)) AS hour,
-                COUNT(*) AS access_count
-              FROM \`tracking.sessions\`
-              WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-              GROUP BY hour
-              ORDER BY access_count DESC
-              LIMIT 5
-            `
-          }
-    ];
-  }
-  
-  export function getTourQueries({ fromDate, toDate }) {
-    return [
-      {
-        title: "Tổng số booking tour",
+  const params = { fromDate, toDate };
+  return [
+    {
+      topic: "user",
+      title: "Tổng số người dùng truy cập",
+      type_data:"general",
+      query: {
+        query: `
+          SELECT COUNT(DISTINCT customerCode) as total_users
+          FROM \`tracking.sessions\`
+          WHERE yearMonthDay BETWEEN @fromDate AND @toDate
+        `,
+        params
+      }
+    },
+    {
+      topic: "user",
+      title: "Tổng số lượt đăng nhập",
+      type_data:"general",
+      query: {
+        query: `
+          SELECT COUNT(*) as total_signins
+          FROM \`tracking.sign_in_account\`
+          WHERE yearMonthDay BETWEEN @fromDate AND @toDate
+        `,
+        params
+      }
+    },
+    {
+      topic: "user",
+      title: "Top 5 vị trí truy cập",
+      type_data:"locationAccess",
+      query: {
+        query: `
+          SELECT location, COUNT(*) as count
+          FROM \`tracking.sessions\`
+          WHERE yearMonthDay BETWEEN @fromDate AND @toDate
+          GROUP BY location
+          ORDER BY count DESC
+          LIMIT 5
+        `,
+        params
+      }
+    },
+    {
+      topic: "user",
+      title: "Top 3 khung giờ truy cập nhiều nhất",
+      type_data:"timeAccess",
+      query: {
+        query: `
+        SELECT 
+        EXTRACT(HOUR FROM TIMESTAMP(timestamp1)) AS hour,
+        COUNT(*) AS access_count
+        FROM \`tracking.sessions\`
+        WHERE timestamp1 IS NOT NULL AND timestamp1 != '' AND DATE(timestamp1) BETWEEN @fromDate AND @toDate
+        GROUP BY hour
+        ORDER BY access_count DESC
+        LIMIT 3
+        `,
+        params
+      }
+    }
+  ];
+}
+
+// ✅ getTourQueries
+export function getTourQueries({ fromDate, toDate }) {
+  const params = { fromDate, toDate };
+  return [
+    {
+      topic: "tour",
+      title: "Tổng số booking tour",
+      type_data:"general",
+      query: {
         query: `
           SELECT COUNT(*) as total_bookings
           FROM \`tracking.book_tour_success\`
-          WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-        `
-      },
-      {
-        title: "Doanh thu từ tour",
+          WHERE yearMonthDay BETWEEN @fromDate AND @toDate
+        `,
+        params
+      }
+    },
+    {
+      topic: "tour",
+      title: "Doanh thu từ tour",
+      type_data:"general",
+      query: {
         query: `
           SELECT SUM(totalAmount) as total_revenue
           FROM \`tracking.book_tour_success\`
-          WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-        `
-      },
-      {
-        title: "Top 5 điểm đến được tìm kiếm nhiều nhất",
+          WHERE yearMonthDay BETWEEN @fromDate AND @toDate
+        `,
+        params
+      }
+    },
+    {
+      topic: "tour",
+      title: "Top 5 điểm đến được tìm kiếm nhiều nhất",
+      type_data:"destinationSearch",
+      query: {
         query: `
-          SELECT id,ANY_VALUE(name) AS name, COUNT(*) as count
+          SELECT id, ANY_VALUE(name) AS name, COUNT(*) as count
           FROM \`tracking.search_destination\`
-          WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
+          WHERE yearMonthDay BETWEEN @fromDate AND @toDate
           GROUP BY id
           ORDER BY count DESC
           LIMIT 5
-        `
+        `,
+        params
       }
-    ];
-  }
-  
-  export function getFlightQueries({ fromDate, toDate }) {
-    return [
-      {
-        title: "Tổng số booking vé máy bay",
+    }
+  ];
+}
+
+// ✅ getFlightQueries
+export function getFlightQueries({ fromDate, toDate }) {
+  const params = { fromDate, toDate };
+  return [
+    {
+      topic: "flight",
+      title: "Tổng số booking vé máy bay",
+      type_data:"general",
+      query: {
         query: `
           SELECT COUNT(*) as total_bookings
           FROM \`tracking.book_flight_success\`
-          WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-        `
-      },
-      {
-        title: "Doanh thu vé máy bay",
+          WHERE yearMonthDay BETWEEN @fromDate AND @toDate
+        `,
+        params
+      }
+    },
+    {
+      topic: "flight",
+      title: "Doanh thu vé máy bay",
+      type_data:"general",
+      query: {
         query: `
           SELECT SUM(bookingPrice) as total_revenue
           FROM \`tracking.book_flight_success\`
-          WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-        `
+          WHERE yearMonthDay BETWEEN @fromDate AND @toDate
+        `,
+        params
       }
-    ];
-  }
-  
-  export function getHotelQueries({ fromDate, toDate }) {
-    return [
-      {
-        title: "Tổng số booking khách sạn",
+    }
+  ];
+}
+
+// ✅ getHotelQueries
+export function getHotelQueries({ fromDate, toDate }) {
+  const params = { fromDate, toDate };
+  return [
+    {
+      topic: "hotel",
+      title: "Tổng số booking khách sạn",
+      type_data:"general",
+      query: {
         query: `
           SELECT COUNT(*) as total_bookings
           FROM \`tracking.book_hotel_success\`
-          WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-        `
-      },
-      {
-        title: "Doanh thu khách sạn",
+          WHERE yearMonthDay BETWEEN @fromDate AND @toDate
+        `,
+        params
+      }
+    },
+    {
+      topic: "hotel",
+      title: "Doanh thu khách sạn",
+      type_data:"general",
+      query: {
         query: `
           SELECT SUM(bookingPrice) as total_revenue
           FROM \`tracking.book_hotel_success\`
-          WHERE ${date} BETWEEN '${fromDate}' AND '${toDate}'
-        `
+          WHERE yearMonthDay BETWEEN @fromDate AND @toDate
+        `,
+        params
       }
-    ];
-  }
-  
-  export function getOverviewQueries({ fromDate, toDate }) {
-    return [
-      ...getUserQueries({ fromDate, toDate }),
-      ...getTourQueries({ fromDate, toDate }),
-      ...getFlightQueries({ fromDate, toDate }),
-      ...getHotelQueries({ fromDate, toDate })
-    ];
-  }
+    }
+  ];
+}
+
+// ✅ getOverviewQueries
+export function getOverviewQueries({ fromDate, toDate }) {
+  return [
+    ...getUserQueries({ fromDate, toDate }),
+    ...getTourQueries({ fromDate, toDate }),
+    ...getFlightQueries({ fromDate, toDate }),
+    ...getHotelQueries({ fromDate, toDate })
+  ];
+}
   

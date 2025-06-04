@@ -16,19 +16,18 @@ const bigquery = new BigQuery();
 // https://us-central1-vietravel-app.cloudfunctions.net/answerTrackingQuery
 export const answerTrackingQuery = onRequest({ region: "us-central1" }, async (req, res) => {
   const question = req.body.question || "";
-  const rawWords = question.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").split(/\s+/);
-
-  const { normalizedWords, matchedTopics } = await normalizeKeywords(rawWords);
+  const matchedTopics = await normalizeKeywords(question);
   const { fromDate, toDate } = getTimeRangeFromText(question);
+  const timeRangeLabel = getTimeRangeLabel(fromDate, toDate);
+  const summaryTitle = buildSummaryTitle(question, timeRangeLabel);
 
   if (matchedTopics.length === 0) {
     return res.json({
-      answer: "🤖 Xin hỏi rõ hơn. Bạn có thể hỏi về: Tour, Vé máy bay, Khách sạn, User"
+      answer: "🔍 Xin hỏi rõ hơn. Bạn có thể hỏi về: Tour, Vé máy bay, Khách sạn, User"
     });
   }
 
   let queries = [];
-
   for (const topic of matchedTopics) {
     if (topic === "user") queries.push(...getUserQueries({ fromDate, toDate }));
     else if (topic === "tour") queries.push(...getTourQueries({ fromDate, toDate }));
@@ -37,11 +36,42 @@ export const answerTrackingQuery = onRequest({ region: "us-central1" }, async (r
     else if (topic === "general") queries.push(...getOverviewQueries({ fromDate, toDate }));
   }
 
-  const results = [];
-  for (const { title, query } of queries) {
-    const [rows] = await bigquery.query({ query });
-    results.push({ title, data: rows });
+  const grouped = {};
+  for (const { title,type_data, query, topic } of queries) {
+    const [rows] = await bigquery.query(query);
+    if (!grouped[topic]) grouped[topic] = [];
+    grouped[topic].push({ title,type_data, data: rows });
   }
 
-  return res.json({ answer: results });
+  return res.json({ answer: { title: summaryTitle, ...grouped } });
 });
+function getTimeRangeLabel(fromDate, toDate) {
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+  if (fromDate === toDate) {
+    if (fromDate === today) return "hôm nay";
+    if (fromDate === yesterday) return "hôm qua";
+  }
+
+  // Nếu là 7 ngày gần nhất
+  const diffDays = Math.ceil((new Date(toDate) - new Date(fromDate)) / 86400000);
+  if (diffDays === 6 || diffDays === 7) return "7 ngày qua";
+
+  return `từ ${fromDate} đến ${toDate}`;
+}
+function buildSummaryTitle(question, timeRangeLabel) {
+  const q = question.toLowerCase();
+  const t = timeRangeLabel.toLowerCase();
+
+  // Nếu đã có cụm thời gian trong câu hỏi → giữ nguyên
+  if (q.includes(t)) {
+    return capitalizeFirst(question.trim());
+  }
+
+  // Nếu chưa có → thêm vào
+  return `${capitalizeFirst(question.trim())} ${timeRangeLabel}`;
+}
+function capitalizeFirst(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}

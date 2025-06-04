@@ -5,14 +5,22 @@ const DATASET = "tracking";
 const SYNONYM_TABLE = "synonyms";
 
 // Chuẩn hoá từ bằng bảng synonyms
-export async function normalizeKeywords(words) {
+export async function normalizeKeywords(questionTextRaw) {
+  const questionText = String(questionTextRaw || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+
   const query = `
-    SELECT alias, keyword
-    FROM \`tracking.synonyms\`
-    WHERE alias IN UNNEST(@words)
+    SELECT DISTINCT topic, keyword
+    FROM \`${DATASET}.${SYNONYM_TABLE}\`
   `;
-  const [rows] = await bigquery.query({ query, params: { words } });
-  const map = Object.fromEntries(rows.map(row => [row.alias, row.keyword]));
-  return words.map(w => map[w] || w);
+  const [rows] = await bigquery.query({ query });
+
+  const matchedTopics = new Set();
+  for (const row of rows) {
+    const normalizedKeyword = row.keyword.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+    if (questionText.includes(normalizedKeyword)) {
+      matchedTopics.add(row.topic);
+    }
+  }
+
+  return Array.from(matchedTopics);
 }
-// đã cập nhật, nhưng vẫn ko hiểu query
