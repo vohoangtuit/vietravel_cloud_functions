@@ -4,7 +4,7 @@ import { BigQuery } from "@google-cloud/bigquery";
 import { getTimeRangeFromText } from "./config/detect_time.js";
 import { detectIntentFromKeywords } from "./config/detect_intent_keywords.js";
 import { getSQLTemplatesFromIntents } from "./config/query_fetcher.js";
-import { normalizeKeywords} from "./config/topic_detector.js";
+import { normalizeKeywords,removeDiacritics} from "./config/topic_detector.js";
 import {
   getUserQueries,
   getTourQueries,
@@ -19,10 +19,11 @@ export const answerTrackingQuery = onRequest({ region: "us-central1" }, async (r
   const matchedTopics = await normalizeKeywords(question);
   const { fromDate, toDate } = getTimeRangeFromText(question);
   const timeRangeLabel = getTimeRangeLabel(fromDate, toDate);
-  const summaryTitle = buildSummaryTitle(question, timeRangeLabel);
+  const summaryTitle = buildSummaryTitle(question,normalizeKeywords, timeRangeLabel);
 
   if (matchedTopics.length === 0) {
     return res.json({
+      status:2,
       answer: "🔍 Xin hỏi rõ hơn. Bạn có thể hỏi về: Tour, Vé máy bay, Khách sạn, User"
     });
   }
@@ -43,35 +44,35 @@ export const answerTrackingQuery = onRequest({ region: "us-central1" }, async (r
     grouped[topic].push({ title,type_data, data: rows });
   }
 
-  return res.json({ answer: { title: summaryTitle, ...grouped } });
+  return res.json({ status:1,answer: { title: summaryTitle, ...grouped } });
 });
 function getTimeRangeLabel(fromDate, toDate) {
   const today = new Date().toISOString().slice(0, 10);
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
-  if (fromDate === toDate) {
+  if (fromDate === toDate) { 
     if (fromDate === today) return "hôm nay";
     if (fromDate === yesterday) return "hôm qua";
   }
 
-  // Nếu là 7 ngày gần nhất
   const diffDays = Math.ceil((new Date(toDate) - new Date(fromDate)) / 86400000);
   if (diffDays === 6 || diffDays === 7) return "7 ngày qua";
 
   return `từ ${fromDate} đến ${toDate}`;
 }
-function buildSummaryTitle(question, timeRangeLabel) {
-  const q = question.toLowerCase();
-  const t = timeRangeLabel.toLowerCase();
 
-  // Nếu đã có cụm thời gian trong câu hỏi → giữ nguyên
-  if (q.includes(t)) {
-    return capitalizeFirst(question.trim());
+function buildSummaryTitle(original, normalized, timeRangeLabel) {
+  const timeKeywords = ["hôm nay", "hôm qua", "7 ngày qua", "từ", "đến"];
+
+  let cleaned = original;
+  for (const keyword of timeKeywords) {
+    const regex = new RegExp(keyword, "gi");
+    cleaned = cleaned.replace(regex, "").trim();
   }
 
-  // Nếu chưa có → thêm vào
-  return `${capitalizeFirst(question.trim())} ${timeRangeLabel}`;
+  return capitalizeFirst(cleaned) + " " + timeRangeLabel;
 }
+
 function capitalizeFirst(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

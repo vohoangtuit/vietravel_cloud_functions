@@ -24,3 +24,6 @@ export async function normalizeKeywords(questionTextRaw) {
 
   return Array.from(matchedTopics);
 }
+export function removeDiacritics(str) {
+  return str.normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}

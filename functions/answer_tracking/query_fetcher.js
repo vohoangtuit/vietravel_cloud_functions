@@ -5,7 +5,7 @@ export function getUserQueries({ fromDate, toDate }) {
   return [
     {
       topic: "user",
-      title: "Tổng số người dùng truy cập",
+      title: "👤 Số người dùng truy cập",
       type_data:"general",
       query: {
         query: `
@@ -18,7 +18,7 @@ export function getUserQueries({ fromDate, toDate }) {
     },
     {
       topic: "user",
-      title: "Tổng số lượt đăng nhập",
+      title: "📥 Số lượt đăng nhập",
       type_data:"general",
       query: {
         query: `
@@ -31,7 +31,7 @@ export function getUserQueries({ fromDate, toDate }) {
     },
     {
       topic: "user",
-      title: "Top 5 vị trí truy cập",
+      title: "📍 Vị trí truy cập nhiều nhất",
       type_data:"locationAccess",
       query: {
         query: `
@@ -47,7 +47,7 @@ export function getUserQueries({ fromDate, toDate }) {
     },
     {
       topic: "user",
-      title: "Top 3 khung giờ truy cập nhiều nhất",
+      title: "⏰ Khung giờ truy cập nhiều nhất",
       type_data:"timeAccess",
       query: {
         query: `
@@ -72,7 +72,7 @@ export function getTourQueries({ fromDate, toDate }) {
   return [
     {
       topic: "tour",
-      title: "Tổng số booking tour",
+      title: "📄 Tổng số booking tour",
       type_data:"general",
       query: {
         query: `
@@ -85,7 +85,7 @@ export function getTourQueries({ fromDate, toDate }) {
     },
     {
       topic: "tour",
-      title: "Doanh thu từ tour",
+      title: "💰 Doanh thu từ tour",
       type_data:"general",
       query: {
         query: `
@@ -98,7 +98,7 @@ export function getTourQueries({ fromDate, toDate }) {
     },
     {
       topic: "tour",
-      title: "Top 5 điểm đến được tìm kiếm nhiều nhất",
+      title: "📍 Điểm đến tìm kiếm nhiều nhất",
       type_data:"destinationSearch",
       query: {
         query: `
@@ -121,7 +121,7 @@ export function getFlightQueries({ fromDate, toDate }) {
   return [
     {
       topic: "flight",
-      title: "Tổng số booking vé máy bay",
+      title: "📄 Tổng số booking vé máy bay",
       type_data:"general",
       query: {
         query: `
@@ -134,7 +134,7 @@ export function getFlightQueries({ fromDate, toDate }) {
     },
     {
       topic: "flight",
-      title: "Doanh thu vé máy bay",
+      title: "💰 Doanh thu vé máy bay",
       type_data:"general",
       query: {
         query: `
@@ -154,7 +154,7 @@ export function getHotelQueries({ fromDate, toDate }) {
   return [
     {
       topic: "hotel",
-      title: "Tổng số booking khách sạn",
+      title: "📄 Tổng số booking khách sạn",
       type_data:"general",
       query: {
         query: `
@@ -167,7 +167,7 @@ export function getHotelQueries({ fromDate, toDate }) {
     },
     {
       topic: "hotel",
-      title: "Doanh thu khách sạn",
+      title: "💰 Doanh thu khách sạn",
       type_data:"general",
       query: {
         query: `
